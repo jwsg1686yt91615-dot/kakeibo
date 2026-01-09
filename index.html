@@ -19,12 +19,14 @@
     .header-controls { display:flex; justify-content:center; align-items:center; gap:10px; margin:10px 0; }
     .month-nav-btn { background:#ffb6c1; color:#fff; border:none; padding:8px 12px; border-radius:10px; font-size:16px; cursor:pointer; }
     #balance { font-size:32px; font-weight:bold; margin:5px 0; }
-    .user-balances { display: flex; justify-content: center; gap: 15px; margin-bottom: 10px; font-size: 14px; }
-    .user-bal-item { background: rgba(255, 255, 255, 0.6); padding: 5px 12px; border-radius: 12px; }
+    .user-balances { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 15px; width: 100%; }
+    .user-bal-item { background: rgba(255, 255, 255, 0.7); padding: 8px 15px; border-radius: 15px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 85%; max-width: 300px; }
+    .user-bal-item b { color: #ff69b4; font-size: 16px; }
+    .detail-text { font-size: 11px; color: #666; margin-top: 2px; display: block; }
     .minus { color:red !important; }
     main { width:92%; max-width:500px; display:flex; flex-direction:column; gap:12px; }
     .user-selector { display:flex; gap:8px; }
-    .user-selector button { flex:1; padding:12px; font-size:18px; border-radius:12px; border:2px solid #ffb6c1; background:white; color:#ffb6c1; font-family: inherit; }
+    .user-selector button { flex:1; padding:12px; font-size:18px; border-radius:12px; border:2px solid #ffb6c1; background:white; color:#ffb6c1; font-family: inherit; font-weight:bold; }
     .user-selector button.active { background:#ffb6c1; color:white; }
     input, select { width:100%; padding:18px; font-size:18px; border-radius:12px; border:none; box-shadow:0 3px 5px rgba(0,0,0,0.1); box-sizing: border-box; outline:none; }
     #submitBtn { padding:20px; font-size:22px; background:#ff69b4; color:#fff; border:none; border-radius:15px; font-weight:bold; cursor:pointer; margin-top: 10px; }
@@ -46,10 +48,18 @@
     <button class="month-nav-btn" onclick="changeMonth(1)">▶</button>
     <button onclick="refreshAll()" style="background:none; border:none; font-size:20px; cursor:pointer;">🔄</button>
   </div>
+  <div style="font-size:14px; color:#666; margin-bottom: -5px;">二人合計残高</div>
   <div id="balance">¥0</div>
+  
   <div class="user-balances">
-    <div class="user-bal-item">祐太: <span id="yutaBal">¥0</span></div>
-    <div class="user-bal-item">綾香: <span id="ayakaBal">¥0</span></div>
+    <div class="user-bal-item">
+      祐太: <b id="yutaBal">¥0</b>
+      <span class="detail-text">(入:¥<span id="yutaIn">0</span> / 出:¥<span id="yutaEx">0</span>)</span>
+    </div>
+    <div class="user-bal-item">
+      綾香: <b id="ayakaBal">¥0</b>
+      <span class="detail-text">(入:¥<span id="ayakaIn">0</span> / 出:¥<span id="ayakaEx">0</span>)</span>
+    </div>
   </div>
 </header>
 
@@ -72,7 +82,7 @@
 <div id="overlay">完了！</div>
 
 <script>
-// ★GASのURLをここに貼る。テスト中は「テスト用デプロイURL」にすると便利！
+// ★GASのURLをここに貼る（新しいデプロイURLに書き換えてください）
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzqwuc7BgCDapgHER815aW44vPZfQsRcfWEOpla-bQAWDP0vpfB1xeC75bC6SvyIUscIg/exec';
 
 var offset = 0;
@@ -139,10 +149,18 @@ function loadSummary(){
       var balEl = document.getElementById('balance');
       balEl.innerHTML = '¥' + d.balance.toLocaleString();
       balEl.className = (d.balance < 0 ? 'minus' : '');
+      
+      // 祐太
       document.getElementById('yutaBal').textContent = '¥' + d.yutaBal.toLocaleString();
       document.getElementById('yutaBal').className = (d.yutaBal < 0 ? 'minus' : '');
+      document.getElementById('yutaIn').textContent = d.yutaIn.toLocaleString();
+      document.getElementById('yutaEx').textContent = d.yutaEx.toLocaleString();
+      
+      // 綾香
       document.getElementById('ayakaBal').textContent = '¥' + d.ayakaBal.toLocaleString();
       document.getElementById('ayakaBal').className = (d.ayakaBal < 0 ? 'minus' : '');
+      document.getElementById('ayakaIn').textContent = d.ayakaIn.toLocaleString();
+      document.getElementById('ayakaEx').textContent = d.ayakaEx.toLocaleString();
     });
 }
 
