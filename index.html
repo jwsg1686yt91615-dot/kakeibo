@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   
-  <link rel="apple-touch-icon" sizes="180x180" href="ここにGitHubの画像RAWURL">
-  <link rel="icon" type="image/png" href="ここにGitHubの画像RAWURL">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/syokupan2/main/unnamed.png">
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/syokupan2/main/unnamed.png">
   
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,15 +20,14 @@
     .month-nav-btn { background:#ffb6c1; color:#fff; border:none; padding:8px 12px; border-radius:10px; font-size:16px; cursor:pointer; }
     #balance { font-size:32px; font-weight:bold; margin:5px 0; }
     .user-balances { display: flex; justify-content: center; gap: 15px; margin-bottom: 10px; font-size: 14px; }
-    .user-bal-item { background: rgba(255, 255, 255, 0.6); padding: 5px 12px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .user-bal-item { background: rgba(255, 255, 255, 0.6); padding: 5px 12px; border-radius: 12px; }
     .minus { color:red !important; }
     main { width:92%; max-width:500px; display:flex; flex-direction:column; gap:12px; }
     .user-selector { display:flex; gap:8px; }
-    .user-selector button { flex:1; padding:12px; font-size:18px; border-radius:12px; border:2px solid #ffb6c1; background:white; color:#ffb6c1; font-family: inherit; cursor:pointer; }
+    .user-selector button { flex:1; padding:12px; font-size:18px; border-radius:12px; border:2px solid #ffb6c1; background:white; color:#ffb6c1; font-family: inherit; }
     .user-selector button.active { background:#ffb6c1; color:white; }
     input, select { width:100%; padding:18px; font-size:18px; border-radius:12px; border:none; box-shadow:0 3px 5px rgba(0,0,0,0.1); box-sizing: border-box; outline:none; }
     #submitBtn { padding:20px; font-size:22px; background:#ff69b4; color:#fff; border:none; border-radius:15px; font-weight:bold; cursor:pointer; margin-top: 10px; }
-    #submitBtn:disabled { background: #ccc; }
     .history-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .user-badge { font-size: 10px; padding: 2px 6px; border-radius: 8px; background: #ffe4e1; color: #ff69b4; display:inline-block; margin-bottom:4px; }
     .price.expense { color: #ff69b4; font-weight: bold; }
@@ -73,7 +72,7 @@
 <div id="overlay">完了！</div>
 
 <script>
-// ★GASの「新しいデプロイ」で取得したURLをここに貼ってください
+// ★GASのURLをここに貼る。テスト中は「テスト用デプロイURL」にすると便利！
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzqwuc7BgCDapgHER815aW44vPZfQsRcfWEOpla-bQAWDP0vpfB1xeC75bC6SvyIUscIg/exec';
 
 var offset = 0;
@@ -117,12 +116,8 @@ function submit(){
   document.getElementById('submitBtn').disabled = true;
 
   const query = new URLSearchParams({
-    action: 'add',
-    amount: amt,
-    type: document.getElementById('type').value,
-    category: document.getElementById('category').value,
-    other: document.getElementById('other').value,
-    user: currentUser
+    action: 'add', amount: amt, type: document.getElementById('type').value,
+    category: document.getElementById('category').value, other: document.getElementById('other').value, user: currentUser
   });
 
   fetch(`${GAS_URL}?${query}`)
@@ -184,7 +179,6 @@ function deleteRow(dateFull, amount, category, user) {
 }
 
 function changeMonth(v){ offset += v; refreshAll(); }
-
 setUser('祐太'); buildCategory(); refreshAll();
 </script>
 </body>
