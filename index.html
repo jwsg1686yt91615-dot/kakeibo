@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+  <link rel="apple-touch-icon" sizes="180x180" href="ここにGitHubの画像RAWURL">
+  <link rel="icon" type="image/png" href="ここにGitHubの画像RAWURL">
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="あやゆた家計簿">
+  <meta name="theme-color" content="#fff0f5">
+
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body { margin:0; font-family: 'Comic Neue', cursive; background:#fff0f5; color:#333; display:flex; flex-direction:column; align-items:center; min-height: 100vh; padding-bottom: 50px; }
+    header { text-align:center; padding:20px; width: 100%; box-sizing: border-box; }
+    .header-controls { display:flex; justify-content:center; align-items:center; gap:10px; margin:10px 0; }
+    .month-nav-btn { background:#ffb6c1; color:#fff; border:none; padding:8px 12px; border-radius:10px; font-size:16px; }
+    #balance { font-size:32px; font-weight:bold; margin:5px 0; }
+    .user-balances { display: flex; justify-content: center; gap: 15px; margin-bottom: 10px; font-size: 14px; }
+    .user-bal-item { background: rgba(255, 255, 255, 0.6); padding: 5px 12px; border-radius: 12px; }
+    .minus { color:red !important; }
+    main { width:92%; max-width:500px; display:flex; flex-direction:column; gap:12px; }
+    .user-selector { display:flex; gap:8px; }
+    .user-selector button { flex:1; padding:12px; font-size:18px; border-radius:12px; border:2px solid #ffb6c1; background:white; color:#ffb6c1; font-family: inherit; }
+    .user-selector button.active { background:#ffb6c1; color:white; }
+    input, select { width:100%; padding:18px; font-size:18px; border-radius:12px; border:none; box-shadow:0 3px 5px rgba(0,0,0,0.1); box-sizing: border-box; }
+    #submitBtn { padding:20px; font-size:22px; background:#ff69b4; color:#fff; border:none; border-radius:15px; font-weight:bold; margin-top: 10px; }
+    .history-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .user-badge { font-size: 10px; padding: 2px 6px; border-radius: 8px; background: #ffe4e1; color: #ff69b4; display:inline-block; margin-bottom:4px; }
+    .price.expense { color: #ff69b4; font-weight: bold; }
+    .price.income { color: #00bfff; font-weight: bold; }
+    .del-btn { padding: 10px 15px; font-size: 24px; border:none; background:none; }
+    #overlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; font-size:28px; background:rgba(0,0,0,0.7); color:#fff; z-index:100; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1 style="font-size:24px; color:#ff69b4; margin:0;">あやゆた家計簿 💰</h1>
+  <div class="header-controls">
+    <button class="month-nav-btn" onclick="changeMonth(-1)">◀</button>
+    <span id="monthLabel" style="font-weight:bold;">---</span>
+    <button class="month-nav-btn" onclick="changeMonth(1)">▶</button>
+    <button onclick="refreshAll()" style="background:none; border:none; font-size:20px;">🔄</button>
+  </div>
+  <div id="balance">¥0</div>
+  <div class="user-balances">
+    <div class="user-bal-item">祐太: <span id="yutaBal">¥0</span></div>
+    <div class="user-bal-item">綾香: <span id="ayakaBal">¥0</span></div>
+  </div>
+</header>
+
+<main>
+  <div class="user-selector">
+    <button id="btn-yuta" onclick="setUser('祐太')">祐太</button>
+    <button id="btn-ayaka" onclick="setUser('綾香')">綾香</button>
+  </div>
+  <select id="type" onchange="onTypeChange()">
+    <option value="支出">支出</option>
+    <option value="収入">収入</option>
+  </select>
+  <input id="amount" type="number" inputmode="numeric" placeholder="金額を入力">
+  <select id="category" onchange="toggleOther()"></select>
+  <input id="other" placeholder="詳細を入力" style="display:none">
+  <button id="submitBtn" onclick="submit()">登録する</button>
+</main>
+
+<div id="historyList" style="width:92%; max-width:500px; margin-top:20px;"></div>
+<div id="overlay">完了！</div>
+
+<script>
+// ★ここを自分のGASのURLに書き換えてください
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzqwuc7BgCDapgHER815aW44vPZfQsRcfWEOpla-bQAWDP0vpfB1xeC75bC6SvyIUscIg/exec';
+
+var offset = 0;
+var currentUser = '祐太';
+
+function refreshAll() {
+  document.getElementById('balance').innerHTML = '...';
+  loadSummary();
+  loadHistory();
+}
+
+function setUser(name) {
+  currentUser = name;
+  document.getElementById('btn-yuta').className = (name === '祐太' ? 'active' : '');
+  document.getElementById('btn-ayaka').className = (name === '綾香' ? 'active' : '');
+}
+
+function onTypeChange(){
+  buildCategory();
+  document.getElementById('amount').style.background = (document.getElementById('type').value === '支出' ? 'rgba(255,182,193,0.1)' : 'rgba(135,206,250,0.1)');
+}
+
+function buildCategory(){
+  var cat = document.getElementById('category');
+  var type = document.getElementById('type').value;
+  cat.innerHTML = '';
+  var list = (type === '支出' ? ['食費','ガス','電気','水道','ガソリン','交際費','たばこ','その他'] : ['給料']);
+  for(var i=0; i<list.length; i++){
+    var o = document.createElement('option'); o.textContent = list[i]; cat.appendChild(o);
+  }
+  toggleOther();
+}
+
+function toggleOther(){
+  document.getElementById('other').style.display = (document.getElementById('category').value === 'その他' ? 'block' : 'none');
+}
+
+function submit(){
+  var amt = document.getElementById('amount').value;
+  if(!amt) return;
+  
+  const data = {
+    method: 'add',
+    amount: amt,
+    type: document.getElementById('type').value,
+    category: document.getElementById('category').value,
+    other: document.getElementById('other').value,
+    user: currentUser
+  };
+
+  fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }).then(res => res.json()).then(res => {
+    document.getElementById('overlay').style.display='flex';
+    document.getElementById('amount').value = '';
+    setTimeout(function(){ document.getElementById('overlay').style.display='none'; }, 800);
+    refreshAll();
+  });
+}
+
+function loadSummary(){
+  fetch(`${GAS_URL}?action=getSummary&offset=${offset}`)
+    .then(res => res.json())
+    .then(d => {
+      document.getElementById('monthLabel').textContent = d.label;
+      var balEl = document.getElementById('balance');
+      balEl.innerHTML = '¥' + d.balance.toLocaleString();
+      balEl.className = (d.balance < 0 ? 'minus' : '');
+      document.getElementById('yutaBal').textContent = '¥' + d.yutaBal.toLocaleString();
+      document.getElementById('yutaBal').className = (d.yutaBal < 0 ? 'minus' : '');
+      document.getElementById('ayakaBal').textContent = '¥' + d.ayakaBal.toLocaleString();
+      document.getElementById('ayakaBal').className = (d.ayakaBal < 0 ? 'minus' : '');
+    });
+}
+
+function loadHistory() {
+  fetch(`${GAS_URL}?action=getHistory`)
+    .then(res => res.json())
+    .then(data => {
+      var list = document.getElementById('historyList');
+      list.innerHTML = '';
+      if(!data || data.length === 0) { list.innerHTML = '<div style="text-align:center">なし</div>'; return; }
+      for(var i=0; i<data.length && i<10; i++){
+        var item = data[i];
+        var isExp = (item.type === '支出');
+        var catDisp = (item.category === 'その他' ? item.other : item.category);
+        var html = `<div class="history-item">
+          <div style="flex-grow:1">
+            <span class="user-badge">${item.user}</span>
+            <div style="font-size:11px; color:#999;">${item.dateDisplay}</div>
+            <div style="font-size:16px; font-weight:bold;">${catDisp}</div>
+          </div>
+          <div style="text-align:right; margin-right:10px">
+            <div class="price ${isExp?'expense':'income'}">${isExp?'-':'+'}¥${item.amount.toLocaleString()}</div>
+          </div>
+          <button class="del-btn" onclick="deleteRow('${item.dateFull}',${item.amount},'${item.category}','${item.user}')">🗑️</button>
+        </div>`;
+        list.insertAdjacentHTML('beforeend', html);
+      }
+    });
+}
+
+function deleteRow(dateFull, amount, category, user) {
+  if (!window.confirm('本当に削除する？')) return;
+  
+  const data = {
+    method: 'delete',
+    dateFull: dateFull,
+    amount: amount,
+    category: category,
+    user: user
+  };
+
+  fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }).then(() => refreshAll());
+}
+
+function changeMonth(v){ offset += v; refreshAll(); }
+
+setUser('祐太'); buildCategory(); refreshAll();
+</script>
+</body>
+</html>
